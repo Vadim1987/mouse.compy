@@ -234,7 +234,13 @@ DELIGHT = {
   wink_p2 = 2 / 3
 }
 
--- Barrier envelope and placement (sampled per session)
+-- Barrier shape and placement (sampled per session). The
+-- barrier is an axis-aligned rounded box fitted to the
+-- inner play rectangle (screen minus one mouse on each
+-- side). min_px: smallest side; area_frac: max area as a
+-- fraction of that rectangle, kept at half so a boxed-in
+-- barrier still leaves clear room to go around it;
+-- corner: corner radius; fade: fade time.
 
 BARRIER_COLOR = {
   0.5,
@@ -245,11 +251,9 @@ BARRIER_COLOR = {
 BARRIER = {
   first_cheese = 5,
   swap_every = 3,
-  thick_frac = 0.05,
-  bbox_w_frac = 0.55,
-  bbox_h_frac = 0.3,
-  area_frac = 0.03,
-  margin = 0.02,
+  min_px = 50,
+  area_frac = 0.5,
+  corner = 12,
   fade = 0.15,
   color = BARRIER_COLOR
 }

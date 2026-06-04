@@ -148,9 +148,8 @@ end
 
 barrier = {
   active = false,
-  angle = 0,
-  len = 0,
-  thick = 0,
+  bw = 0,
+  bh = 0,
   x = 0,
   y = 0,
   alpha = 0,
@@ -171,49 +170,40 @@ end
 
 -- Sample orientation and length once for the session
 
--- Max bar length whose rotated bbox fits a screen
--- fraction along one axis. cos/sin pick the axis.
+-- Inner play rectangle: screen minus one mouse width on
+-- each side. A barrier kept inside it always leaves the
+-- mouse room to pass. Returns its width and height.
 
-function len_cap(limit, along, across)
-  if along <= 0 then
-    return math.huge
-  end
-  return (limit - barrier.thick * across) / along
+function barrier_inset()
+  local hx, hy = mm_half()
+  return APP.width - 4 * hx, APP.height - 4 * hy
 end
 
--- Sample orientation once; horizontal or vertical only
--- (never diagonal). Length = largest value that meets
--- the width, height, and area envelope.
+-- Sample a random axis-aligned box once for the session.
+-- Any aspect ratio, fitted to the inner rectangle and
+-- held under half its area, so the mouse can get around.
 
 function barrier_shape()
-  barrier.angle = love.math.random(0, 1) * math.pi / 2
-  barrier.thick = APP.width * BARRIER.thick_frac
-  local c, s = math.cos(barrier.angle), math.sin(barrier.angle)
-  local lw = len_cap(APP.width * BARRIER.bbox_w_frac, c, s)
-  local lh = len_cap(APP.height * BARRIER.bbox_h_frac, s, c)
-  local la = APP.width * APP.height * BARRIER.area_frac
-  barrier.len = math.min(lw, lh, la / barrier.thick)
+  local iw, ih = barrier_inset()
+  local lim = iw * ih * BARRIER.area_frac
+  local mn = BARRIER.min_px
+  barrier.bw = rand_range(mn, math.min(iw, lim / mn))
+  barrier.bh = rand_range(mn, math.min(ih, lim / barrier.bw))
   barrier.shaped = true
 end
 
--- Rotated bounding-box half-extents of the bar
+-- Bounding-box half-extents of the box
 
 function barrier_bbox()
-  local c = math.abs(math.cos(barrier.angle))
-  local s = math.abs(math.sin(barrier.angle))
-  local hw = (barrier.len / 2) * c + (barrier.thick / 2) * s
-  local hh = (barrier.len / 2) * s + (barrier.thick / 2) * c
-  return hw, hh
+  return barrier.bw / 2, barrier.bh / 2
 end
 
--- Min center offsets that keep the bbox inside the 2%
--- playfield margin.
+-- Min center offsets that keep the box inside the inner
+-- rectangle (one mouse width off each screen edge).
 
 function barrier_margins()
-  local hw, hh = barrier_bbox()
-  local mx = APP.width * BARRIER.margin + hw
-  local my = APP.height * BARRIER.margin + hh
-  return mx, my
+  local hx, hy = mm_half()
+  return 2 * hx + barrier.bw / 2, 2 * hy + barrier.bh / 2
 end
 
 -- Pick a legal center: bbox inside the playfield with a
@@ -234,14 +224,10 @@ function barrier_place(px, py)
 end
 
 function barrier_disc_at(px, py, r, cx, cy)
-  local dx, dy = px - cx, py - cy
-  local a = -barrier.angle
-  local c, s = math.cos(a), math.sin(a)
-  local lx = dx * c - dy * s
-  local ly = dx * s + dy * c
-  local qx = clamp(lx, -barrier.len / 2, barrier.len / 2)
-  local qy = clamp(ly, -barrier.thick / 2, barrier.thick / 2)
-  local ex, ey = lx - qx, ly - qy
+  local hw, hh = barrier.bw / 2, barrier.bh / 2
+  local qx = clamp(px, cx - hw, cx + hw)
+  local qy = clamp(py, cy - hh, cy + hh)
+  local ex, ey = px - qx, py - qy
   return ex * ex + ey * ey <= r * r
 end
 
@@ -349,7 +335,6 @@ function barrier_draw()
   end
   gfx.push("all")
   gfx.translate(barrier.x, barrier.y)
-  gfx.rotate(barrier.angle)
   barrier_sprite(barrier.alpha)
   gfx.pop()
 end
@@ -426,8 +411,7 @@ function meet.enter()
 end
 
 function meet.leave()
-  love.mouse.setRelativeMode(false)
-  cursor_show()
+  cursor_release()
 end
 
 -- Clamp the mouse center to the playfield walls.

@@ -253,16 +253,20 @@ function cheese_sprite()
   gfx.pop()
 end
 
--- Barrier: a rounded bar in the barrier's local frame
--- (meet.lua sets the transform).
+-- Barrier: an axis-aligned rounded box in its local
+-- frame (meet.lua sets the position).
 
 function barrier_sprite(alpha)
-  local l, t = barrier.len, barrier.thick
-  local core = math.max(0, l - t)
+  local hw, hh = barrier.bw / 2, barrier.bh / 2
   set_color(BARRIER.color, alpha)
-  gfx.rectangle("fill", -core / 2, -t / 2, core, t)
-  gfx.circle("fill", -core / 2, 0, t / 2)
-  gfx.circle("fill", core / 2, 0, t / 2)
+  gfx.rectangle(
+    "fill",
+    -hw,
+    -hh,
+    barrier.bw,
+    barrier.bh,
+    BARRIER.corner
+  )
 end
 
 -- Neutral mouse icon for the no-mouse screen: body and

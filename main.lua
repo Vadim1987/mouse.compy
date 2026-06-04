@@ -188,6 +188,14 @@ function cursor_show()
   love.mouse.setVisible(true)
 end
 
+-- Restore the system cursor and leave relative mode, for
+-- both a normal game exit and any quit path.
+
+function cursor_release()
+  love.mouse.setRelativeMode(false)
+  cursor_show()
+end
+
 -- Game control
 
 function open_game(name)
@@ -238,6 +246,13 @@ end
 
 function love.focus(f)
   GS.focused = f
+end
+
+-- Any exit restores the cursor, so quitting mid-game
+-- (e.g. Ctrl+Esc) never leaves it hidden or captured.
+
+function love.quit()
+  cursor_release()
 end
 
 -- Touch on Android arrives as a synthetic mouse event
