@@ -10,25 +10,17 @@ require("notch")
 gfx = love.graphics
 
 -- Event -> library sound, played as compy.audio[name]().
--- knock / ping / win are final library sounds. The three
--- "beep" entries are placeholders: movement, cheese, and
--- pop want micro:bit sounds Compy cannot load from local
--- files, so they beep for now. An audible beep on those
--- events confirms the wiring is correct.
---
--- TO FINALIZE (no other code change): once the real
--- sounds are in the library, swap each "beep" below for
--- its final name (see per-line notes). Spec names the
--- cheese sound powerup-8, but the asset on hand is
--- powerup-12 -- confirm which before swapping.
+-- move / cheese / pop use the micro:bit sounds added to
+-- the compy.audio library (step / powerup / chirp);
+-- hit / click / bell use the retro knock / ping / win.
 
 SND = {
-  move = "beep",
+  move = "step",
   hit = "knock",
-  cheese = "beep",
+  cheese = "powerup",
   click = "ping",
   bell = "win",
-  pop = "beep"
+  pop = "chirp"
 }
 
 function play(name)

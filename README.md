@@ -1,7 +1,7 @@
 # Mouse Games (Compy)
 
 The `mouse` program from `spec/mouse.md`: a digit-launched
-menu of mouse mini-games. Same house style as maze
+menu of mouse mini-games on LÖVE2D. Same house style as maze
 and pong3d — global functions, one state table, dispatch
 tables, no defensive code, SVG2LÖVE sprites.
 
@@ -138,20 +138,16 @@ only built games.
 ## Sound
 
 `play(name)` calls `compy.audio[name]` -- all sounds come from
-the standard library. Non-library (local file) sounds are not
-available on Compy, so the events wanting one use the library
-`beep` as a placeholder until the real sounds are added.
-Event-to-sound mapping (`SND` in `main.lua`):
+the standard library. Event-to-sound mapping (`SND` in
+`main.lua`):
 
 - wall/barrier hit -> `knock`, button click -> `ping`,
-  find hover -> `win` -- library sounds.
-- movement, cheese delight, bubble pop -> placeholder `beep`.
-  Intended once added to the library: movement -> `footsteps-5`,
-  cheese -> `powerup-8` (played twice), pop -> `neutral-l4`.
-  Swap the three names in `SND` to finish.
+  find hover -> `win` -- retro library sounds.
+- movement -> `step`, cheese delight -> `powerup` (played
+  twice), bubble pop -> `chirp` -- micro:bit library sounds.
 
-The intended movement/cheese/pop sounds are micro:bit built-in
-sounds (MIT, Lancaster University) -- see `SOUND-LICENSE.md`.
+The movement/cheese/pop sounds are micro:bit built-in sounds
+(MIT, Lancaster University) -- see `SOUND-LICENSE.md`.
 
 ## Tinted layers
 
@@ -180,7 +176,7 @@ again (one pass):
 
     for f in MOUSE_BTN_L MOUSE_BTN_R MOUSE_WHEEL \
              MOUSE_LOGO CHEESE; do
-      sed -i '' '/^gfx\.setColor /d' "$f.lua"   # macOS
+      sed -i '' '/^gfx\.setColor(/d' "$f.lua"   # macOS
     done
 
 TODO (transpiler, future): add a "tintable" mode — a flag or a
@@ -213,10 +209,9 @@ line to `GAMES` and `games`. No changes to main's callbacks.
   250x440 body, so the runtime places the phases onto the
   body-logo position for the wink to land in place.
 - Audio is limited to the standard library (`compy.audio`);
-  non-library (local file) sounds are not available on Compy,
-  so movement/cheese/pop use a placeholder beep until the real
-  sounds are added to the library (see Sound). Layer `.lua`
-  files load via `require` from the program directory.
+  movement/cheese/pop use micro:bit sounds (`step`, `powerup`,
+  `chirp`) added to that library. Layer `.lua` files load via
+  `require` from the program directory.
 - `mouse_present()` is heuristic. SDL 2.28.5 exposes no
   mouse-presence query and no connect/disconnect event, so the
   program assumes a mouse is present at launch and shows the
@@ -229,3 +224,4 @@ line to `GAMES` and `games`. No changes to main's callbacks.
   built-in trackpad sends `istouch = false` and counts as a
   mouse, so it is not excluded; and there is no disconnect
   event.
+  
