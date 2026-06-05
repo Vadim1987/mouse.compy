@@ -154,7 +154,6 @@ barrier = {
   y = 0,
   alpha = 0,
   fade_dir = 0,
-  shaped = false,
   cheese_seen = 0,
   swap_x = 0,
   swap_y = 0
@@ -162,34 +161,42 @@ barrier = {
 
 function barrier_clear()
   barrier.active = false
-  barrier.shaped = false
   barrier.cheese_seen = 0
   barrier.alpha = 0
   barrier.fade_dir = 0
 end
 
--- Sample orientation and length once for the session
-
--- Inner play rectangle: screen minus one mouse width on
--- each side. A barrier kept inside it always leaves the
--- mouse room to pass. Returns its width and height.
+-- Inner play rectangle: screen minus a clearance margin
+-- (in mouse widths) on each side. A barrier kept inside
+-- it always leaves room to pass. Returns width, height.
 
 function barrier_inset()
   local hx, hy = mm_half()
-  return APP.width - 4 * hx, APP.height - 4 * hy
+  local c = BARRIER.clearance
+  return APP.width - 4 * c * hx, APP.height - 4 * c * hy
 end
 
--- Sample a random axis-aligned box once for the session.
--- Any aspect ratio, fitted to the inner rectangle and
--- held under half its area, so the mouse can get around.
+-- One box side: at least min_px and the area-floor share
+-- (alo), at most the side cap and the area-cap share
+-- (ahi). The area shares couple the two sides together.
+
+function barrier_side(cap, alo, ahi)
+  local lo = math.max(BARRIER.min_px, alo)
+  return rand_range(lo, math.min(cap, ahi))
+end
+
+-- Re-sample a random axis-aligned box. Random aspect,
+-- fitted to the inner rectangle, with area between the
+-- min and max fractions of it. Called on each appearance.
 
 function barrier_shape()
   local iw, ih = barrier_inset()
-  local lim = iw * ih * BARRIER.area_frac
   local mn = BARRIER.min_px
-  barrier.bw = rand_range(mn, math.min(iw, lim / mn))
-  barrier.bh = rand_range(mn, math.min(ih, lim / barrier.bw))
-  barrier.shaped = true
+  local amin = iw * ih * BARRIER.area_min_frac
+  local amax = iw * ih * BARRIER.area_frac
+  local w = barrier_side(iw, amin / ih, amax / mn)
+  local h = barrier_side(ih, amin / w, amax / w)
+  barrier.bw, barrier.bh = w, h
 end
 
 -- Bounding-box half-extents of the box
@@ -199,11 +206,14 @@ function barrier_bbox()
 end
 
 -- Min center offsets that keep the box inside the inner
--- rectangle (one mouse width off each screen edge).
+-- rectangle (clearance mouse widths off each edge).
 
 function barrier_margins()
   local hx, hy = mm_half()
-  return 2 * hx + barrier.bw / 2, 2 * hy + barrier.bh / 2
+  local c = BARRIER.clearance
+  local mx = 2 * c * hx + barrier.bw / 2
+  local my = 2 * c * hy + barrier.bh / 2
+  return mx, my
 end
 
 -- Pick a legal center: bbox inside the playfield with a
@@ -293,9 +303,7 @@ end
 -- Place the first barrier and fade it in
 
 function barrier_appear(px, py)
-  if not barrier.shaped then
-    barrier_shape()
-  end
+  barrier_shape()
   barrier_place(px, py)
   barrier.active = true
   barrier.alpha = 1
@@ -324,6 +332,7 @@ function barrier_fade(dt)
   if barrier.fade_dir == 1 and 1 <= barrier.alpha then
     barrier.fade_dir = 0
   elseif barrier.fade_dir == -1 and barrier.alpha <= 0 then
+    barrier_shape()
     barrier_place(barrier.swap_x, barrier.swap_y)
     barrier.fade_dir = 1
   end
@@ -404,7 +413,6 @@ function meet.enter()
   reset_glow()
   reset_mm_timers()
   barrier_clear()
-  barrier_shape()
   cheese_respawn()
   love.mouse.setVisible(false)
   love.mouse.setRelativeMode(true)

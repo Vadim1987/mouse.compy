@@ -234,13 +234,14 @@ DELIGHT = {
   wink_p2 = 2 / 3
 }
 
--- Barrier shape and placement (sampled per session). The
--- barrier is an axis-aligned rounded box fitted to the
--- inner play rectangle (screen minus one mouse on each
--- side). min_px: smallest side; area_frac: max area as a
--- fraction of that rectangle, kept at half so a boxed-in
--- barrier still leaves clear room to go around it;
--- corner: corner radius; fade: fade time.
+-- Barrier shape and placement, re-sampled on every
+-- appearance. Axis-aligned rounded box fitted to the
+-- inner play rectangle (screen minus clearance mouse
+-- widths on each side). min_px: smallest side;
+-- area_min_frac / area_frac: min and max area as a
+-- fraction of the inner rectangle; clearance: side
+-- margin in mouse widths (>1 leaves room to pass
+-- smoothly); corner: corner radius; fade: fade time.
 
 BARRIER_COLOR = {
   0.5,
@@ -252,7 +253,9 @@ BARRIER = {
   first_cheese = 5,
   swap_every = 3,
   min_px = 50,
+  area_min_frac = 0.12,
   area_frac = 0.5,
+  clearance = 1.25,
   corner = 12,
   fade = 0.15,
   color = BARRIER_COLOR
