@@ -216,21 +216,38 @@ function barrier_margins()
   return mx, my
 end
 
--- Pick a legal center: bbox inside the playfield with a
--- 2% margin, not over the mouse body. Resample on overlap.
+-- One random box center within the legal placement band.
+
+function barrier_center()
+  local mx, my = barrier_margins()
+  return rand_range(mx, APP.width - mx),
+       rand_range(my, APP.height - my)
+end
+
+-- Band corner farthest from the mouse: the least-overlap
+-- placement when the legal band has no fully-clear spot.
+
+function barrier_far_center(px, py)
+  local mx, my = barrier_margins()
+  return pick_far(px, mx, APP.width - mx),
+       pick_far(py, my, APP.height - my)
+end
+
+-- Legal center: bbox inside the inner rect, clear of the
+-- mouse. Bounded rejection; if none clear (band collapsed),
+-- use the corner farthest from the mouse. Never spins.
 
 function barrier_place(px, py)
-  local mx, my = barrier_margins()
-  local phx, phy = mm_half()
-  local r = math.max(phx, phy)
-  while true do
-    local x = rand_range(mx, APP.width - mx)
-    local y = rand_range(my, APP.height - my)
+  local hx, hy = mm_half()
+  local r = math.max(hx, hy)
+  for _ = 1, SAMPLE_TRIES do
+    local x, y = barrier_center()
     if not barrier_disc_at(px, py, r, x, y) then
       barrier.x, barrier.y = x, y
       return 
     end
   end
+  barrier.x, barrier.y = barrier_far_center(px, py)
 end
 
 function barrier_disc_at(px, py, r, cx, cy)
@@ -372,7 +389,7 @@ function reset_mm_timers()
   mm.cheese_echo = 0
   mm.right_flash = 0
   mm.hit_snd = 0
-  mm.move_snd = 0
+  mm.step_acc = 0
   mm.speed = 0
   mm.move_dir = 0
 end
@@ -463,10 +480,11 @@ end
 
 function meet_after_move(ox, oy)
   local dx, dy = mm.x - ox, mm.y - oy
-  mm.speed = math.sqrt(dx * dx + dy * dy) / MOUSE_TUNE.smooth
+  local d = math.sqrt(dx * dx + dy * dy)
+  mm.speed = d / MOUSE_TUNE.smooth
   if MOUSE_TUNE.jitter < mm.speed then
     mm.move_dir = math.atan2(dy, dx)
-    mm.move_snd = play_gated(SND.move, mm.move_snd, move_gap())
+    step_accumulate(d)
   end
 end
 
@@ -533,18 +551,14 @@ function update_tilt(dt)
   mm.tilt = mm.tilt + (target - mm.tilt) * k
 end
 
--- Movement-sound cadence scales with speed
+-- Footstep cadence: one step per fixed distance travelled,
+-- so the rhythm tracks how fast the mouse actually moves.
 
-function move_gap()
-  local t = math.min(1, mm.speed / MOVE_SND.fast_speed)
-  return MOVE_SND.slow + (MOVE_SND.fast - MOVE_SND.slow) * t
-end
-
-function update_move_snd(dt)
-  mm.move_snd = mm.move_snd - dt
-  if MOUSE_TUNE.jitter < mm.speed and mm.move_snd <= 0 then
+function step_accumulate(d)
+  mm.step_acc = mm.step_acc + d
+  if MOVE_SND.step_dist <= mm.step_acc then
     play(SND.move)
-    mm.move_snd = move_gap()
+    mm.step_acc = mm.step_acc - MOVE_SND.step_dist
   end
 end
 
@@ -573,7 +587,6 @@ function meet_update_active(dt)
     on_cheese()
   end
   update_tilt(dt)
-  update_move_snd(dt)
   update_wheel(dt)
   update_timers(dt)
 end

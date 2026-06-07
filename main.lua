@@ -159,14 +159,30 @@ function random_field_point(m)
   return x, y
 end
 
+-- The farther of two coordinates from p, in either order.
+-- Used to push a fallback as far from a point as allowed.
+
+function pick_far(p, a, b)
+  if math.abs(p - a) < math.abs(p - b) then
+    return b
+  end
+  return a
+end
+
+-- Random in-field point at least `need` from (cx, cy).
+-- Bounded rejection; if no try clears `need`, fall back
+-- to the farthest field corner (>= need when possible).
+
 function far_point(cx, cy, need, m)
-  while true do
+  for _ = 1, SAMPLE_TRIES do
     local x, y = random_field_point(m)
     local dx, dy = x - cx, y - cy
     if need * need <= dx * dx + dy * dy then
       return x, y
     end
   end
+  return pick_far(cx, m, APP.width - m),
+       pick_far(cy, m, APP.height - m)
 end
 
 -- Cursor: custom (OS cursor hidden, absolute) vs shown
@@ -374,12 +390,13 @@ function love.wheelmoved(x, y)
   route_input("wheel", y)
 end
 
--- Raw Esc is right-click; Shift+Esc is the
--- back-to-menu chord. Ctrl+Esc is never bound here.
+-- Raw Esc is right-click; Shift+Esc is the back-to-menu
+-- chord. Ctrl+Esc is compy's reset: we release the cursor
+-- on the way out so it survives, then let compy take over.
 
 function handle_escape()
   if ctrl_down() then
-    return 
+    cursor_release()
   elseif shift_down() then
     close_game()
   else

@@ -5,6 +5,13 @@
 
 APP = { }
 
+-- Upper bound on random-placement attempts (far_point,
+-- barrier_place): after this many misses they fall back
+-- to the farthest valid spot, so a frame never spins.
+-- Kept generous so the fallback rarely shows in play.
+
+SAMPLE_TRIES = 64
+
 -- Menu chrome
 
 COLOR_BG = {
@@ -160,12 +167,11 @@ SHADOW = {
   dy = 0.8
 }
 
--- Movement sound cadence (seconds between ticks)
+-- Footstep cadence: pixels of travel per step; hit_gap
+-- is the min seconds between wall-hit knocks.
 
 MOVE_SND = {
-  slow = 0.7,
-  fast = 0.25,
-  fast_speed = 600,
+  step_dist = 64,
   hit_gap = 0.4
 }
 
