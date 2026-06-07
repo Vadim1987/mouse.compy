@@ -391,12 +391,13 @@ function love.wheelmoved(x, y)
 end
 
 -- Raw Esc is right-click; Shift+Esc is the back-to-menu
--- chord. Ctrl+Esc is compy's reset: we release the cursor
--- on the way out so it survives, then let compy take over.
+-- chord. Ctrl+Esc is compy's reset and is not bound here;
+-- the cursor is restored on quit (love.quit), if compy
+-- fires it on that exit.
 
 function handle_escape()
   if ctrl_down() then
-    cursor_release()
+    return 
   elseif shift_down() then
     close_game()
   else
