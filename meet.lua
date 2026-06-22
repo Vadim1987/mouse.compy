@@ -122,18 +122,40 @@ function cheese_progress()
   end
 end
 
--- Overlap test against the visible mouse body.
+-- Cheese collision works in a normalized frame where the
+-- overlap ellipse (mouse half-extents + cheese radius on
+-- each axis) is the unit circle. The mouse center inside
+-- that unit circle means it overlaps the cheese.
 
-function cheese_overlap(x, y)
-  if not cheese.active then
-    return false
-  end
+function cheese_norm(x, y)
   local hx, hy = mm_half()
   local r = CHEESE.size / 2
-  local dx, dy = x - cheese.x, y - cheese.y
-  local nx = dx / (hx + r)
-  local ny = dy / (hy + r)
-  return nx * nx + ny * ny <= 1
+  return (x - cheese.x) / (hx + r),
+       (y - cheese.y) / (hy + r)
+end
+
+-- Squared distance from the origin to segment a->b, both
+-- already in normalized cheese space.
+
+function seg_dist2(ax, ay, bx, by)
+  local dx, dy = bx - ax, by - ay
+  local len2 = dx * dx + dy * dy
+  local t = 0
+  if 0 < len2 then
+    t = clamp(-(ax * dx + ay * dy) / len2, 0, 1)
+  end
+  local cx, cy = ax + t * dx, ay + t * dy
+  return cx * cx + cy * cy
+end
+
+-- True if the mouse center, swept from (ox, oy) to
+-- (nx, ny), touched the cheese anywhere on the way. The
+-- endpoint test alone tunnels through it on a fast flick.
+
+function cheese_swept(ox, oy, nx, ny)
+  local ax, ay = cheese_norm(ox, oy)
+  local bx, by = cheese_norm(nx, ny)
+  return seg_dist2(ax, ay, bx, by) <= 1
 end
 
 function cheese_draw()
@@ -499,6 +521,14 @@ function meet_collide(ox, oy, wall)
   end
 end
 
+-- Score the cheese if the resolved move swept onto it
+
+function meet_take_cheese(ox, oy)
+  if cheese.active and cheese_swept(ox, oy, mm.x, mm.y) then
+    on_cheese()
+  end
+end
+
 function meet_moved(dx, dy)
   if 0 < mm.pause then
     return 
@@ -508,6 +538,7 @@ function meet_moved(dx, dy)
   local wall = clamp_walls()
   meet_collide(ox, oy, wall)
   meet_after_move(ox, oy)
+  meet_take_cheese(ox, oy)
 end
 
 -- Update: tilt toward travel, bump decay, sounds
@@ -583,9 +614,6 @@ end
 
 function meet_update_active(dt)
   cheese_progress()
-  if cheese_overlap(mm.x, mm.y) then
-    on_cheese()
-  end
   update_tilt(dt)
   update_wheel(dt)
   update_timers(dt)
