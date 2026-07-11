@@ -316,3 +316,45 @@ function draw_plug_pair(cx, cy, s)
   usb_plug()
   gfx.pop()
 end
+
+-- Win gauge: a centered row of `goal` pips; the first
+-- `count` are filled, the rest outlined. Shared by all
+-- three mini-games (main draws it over the field).
+
+function draw_pip(x, y, r, filled)
+  if filled then
+    set_color(GAUGE.on)
+    gfx.circle("fill", x, y, r)
+  else
+    set_color(GAUGE.off)
+    gfx.setLineWidth(2)
+    gfx.circle("line", x, y, r)
+  end
+end
+
+function draw_gauge_row(count, goal, cx, cy, r, gap)
+  local x0 = cx - (goal - 1) * gap / 2
+  for i = 1, goal do
+    draw_pip(x0 + (i - 1) * gap, cy, r, i <= count)
+  end
+end
+
+-- Small HUD gauge, top-center, during play
+
+function draw_gauge(count, goal)
+  draw_gauge_row(count, goal, APP.width / 2,
+    GAUGE.hud_y, GAUGE.pip_r, GAUGE.gap)
+end
+
+-- Unified win overlay: dim the field, then the full gauge
+-- large and centered. A tap (handled in main) returns to
+-- the menu. Same for meet, find, and pop.
+
+function draw_win_overlay()
+  gfx.setColor(0, 0, 0, GAUGE.veil_a)
+  gfx.rectangle("fill", 0, 0, APP.width, APP.height)
+  local r = GAUGE.pip_r * GAUGE.win_scale
+  local gap = GAUGE.gap * GAUGE.win_scale
+  draw_gauge_row(WIN.goal, WIN.goal,
+    APP.width / 2, APP.height / 2, r, gap)
+end

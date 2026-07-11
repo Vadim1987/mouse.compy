@@ -108,5 +108,9 @@ function notch_teacher(dir)
   if not (g and g.notched) then
     return 
   end
-  notch_shift(GS.active, dir)
+  if g.teacher then
+    g.teacher(dir)
+  else
+    notch_shift(GS.active, dir)
+  end
 end

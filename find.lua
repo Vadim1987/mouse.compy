@@ -69,6 +69,7 @@ function find.enter()
   local r = find_radius(row)
   local x, y = find_sample(r, row.edge)
   find_spawn(x, y, r)
+  win_reset(FIND_GOAL)
 end
 
 function find.leave()
@@ -100,6 +101,7 @@ function find_enter_circle()
   fc.won_t = 0
   find_resolve()
   play(SND.bell)
+  win_score()
 end
 
 -- Live: age the target, detect entry, fire struggle once
@@ -121,7 +123,7 @@ function find_won(dt)
   fc.won_t = fc.won_t + dt
   fc.warm = math.min(1, fc.won_t / FIND.warm_t)
   local row = find_row()
-  if row.pause <= fc.won_t then
+  if FIND_PAUSE <= fc.won_t then
     find_start_swap(row)
   end
 end

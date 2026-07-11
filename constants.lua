@@ -370,38 +370,39 @@ FIND = {
 }
 
 -- Per-notch table. size: circle diameter as a screen-
--- width fraction; pause: bell-to-next-circle delay;
--- reloc: min center move as a width fraction; edge:
--- allow spawns near the screen edges. One sub-global
--- per level (NM = minus, NP = plus) keeps chunks short.
+-- width fraction; reloc: min center move as a width
+-- fraction; edge: allow spawns near the screen edges.
+-- One sub-global per level (NM = minus, NP = plus) keeps
+-- chunks short.
+
+-- Delay after a find before the cross-fade to the next
+-- target: animation smoothing only, not a level knob
+-- (fixed across notches). Tunable.
+
+FIND_PAUSE = 0.4
 
 FIND_NM2 = {
   size = 0.3,
-  pause = 1.5,
   reloc = 0.2,
   edge = false
 }
 FIND_NM1 = {
   size = 0.22,
-  pause = 1,
   reloc = 0.25,
   edge = false
 }
 FIND_N0 = {
   size = 0.17,
-  pause = 0.8,
   reloc = 0.3,
   edge = false
 }
 FIND_NP1 = {
   size = 0.12,
-  pause = 0.5,
   reloc = 0.4,
   edge = false
 }
 FIND_NP2 = {
   size = 0.08,
-  pause = 0.3,
   reloc = 0.5,
   edge = true
 }
@@ -492,39 +493,54 @@ POP = {
   hi_r = 0.22
 }
 
+-- Delay after a pop before the next bubble grows in:
+-- animation smoothing only, not a level knob. Tunable.
+
+POP_RESPAWN = 0.4
+
+-- Teacher speed axis for pop: a multiplier on the bubble
+-- drift (motion), separate from the progression notch
+-- (streaks climb that). Larger = faster drift. The chord
+-- steps it; it holds while the program runs. Index into
+-- POP_SPD_MULT, default normal (2).
+
+POP_SPD_MULT = {
+  0.7,
+  1,
+  1.4
+}
+POP_SPD_LO = 1
+POP_SPD_HI = 3
+POP_SPD_DEF = 2
+
 -- Per-notch table. size: bubble diameter as a screen-
--- width fraction; respawn: click-to-next-bubble delay;
--- reloc: min center move as a width fraction; motion:
--- drift speed (px/s, 0 = stationary). One sub-global
--- per level (NM = minus, NP = plus) keeps chunks short.
+-- width fraction; reloc: min center move as a width
+-- fraction; motion: drift speed (px/s, 0 = stationary).
+-- One sub-global per level (NM = minus, NP = plus) keeps
+-- chunks short.
 
 POP_NM2 = {
   size = 0.3,
-  respawn = 1,
   reloc = 0.2,
   motion = 0
 }
 POP_NM1 = {
   size = 0.22,
-  respawn = 0.7,
   reloc = 0.25,
   motion = 0
 }
 POP_N0 = {
   size = 0.17,
-  respawn = 0.5,
   reloc = 0.3,
   motion = 0
 }
 POP_NP1 = {
   size = 0.12,
-  respawn = 0.4,
   reloc = 0.4,
   motion = 0
 }
 POP_NP2 = {
   size = 0.08,
-  respawn = 0.3,
   reloc = 0.5,
   motion = 20
 }
@@ -546,3 +562,30 @@ BURST = {
   r = 5,
   min_speed_frac = 0.5
 }
+
+-- Win gauge: a row of pips, one per required success,
+-- filled as the child progresses. Shown small during
+-- play and enlarged on the win overlay. on/off are the
+-- filled and empty pip colors.
+
+GAUGE_OFF = {
+  0.7,
+  0.7,
+  0.72
+}
+
+GAUGE = {
+  pip_r = 10,
+  gap = 28,
+  hud_y = 30,
+  win_scale = 2.4,
+  veil_a = 0.45,
+  on = LEGO_CHEESE,
+  off = GAUGE_OFF
+}
+
+-- Successes to fill each mini-game's gauge. Tunable.
+
+MEET_GOAL = 8
+FIND_GOAL = 8
+POP_GOAL = 8

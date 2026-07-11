@@ -11,6 +11,11 @@ require("pointer")
 
 pop = { notched = true }
 
+-- Teacher speed level: index into POP_SPD_MULT, moved by
+-- the chord. File-scope so it holds across re-entry and
+-- resets to the default only on program restart.
+POP_SPD = POP_SPD_DEF
+
 -- Bubble and run state. Reset fully on enter.
 -- phase: "grow" | "live" | "pop". off: off-target clicks
 -- this spawn. scale: current visual scale. pop_s0: scale
@@ -40,8 +45,18 @@ end
 
 -- Drift velocity for the notch (zero unless motion > 0)
 
+function pop_speed_mult()
+  return POP_SPD_MULT[POP_SPD]
+end
+
+-- Teacher chord: step the drift-speed axis, not the notch
+
+function pop_speed_shift(dir)
+  POP_SPD = clamp(POP_SPD + dir, POP_SPD_LO, POP_SPD_HI)
+end
+
 function pop_set_drift()
-  local m = pop_row().motion
+  local m = pop_row().motion * pop_speed_mult()
   if m <= 0 then
     bubble.vx, bubble.vy = 0, 0
     return 
@@ -71,6 +86,7 @@ function pop.enter()
   local r = pop_radius(pop_row())
   local x, y = pop_sample(r)
   pop_begin(x, y, r)
+  win_reset(POP_GOAL)
 end
 
 function pop.leave()
@@ -130,6 +146,7 @@ end
 
 function pop_hit()
   pop_resolve()
+  win_score()
   play(SND.pop)
   pop_spawn_burst()
   local row = pop_row()
@@ -221,7 +238,7 @@ function pop_anim(dt)
   bubble.t = bubble.t + dt
   local sh = 1 - bubble.t / POP.pop_t
   bubble.scale = bubble.pop_s0 * math.max(0, sh)
-  if pop_row().respawn <= bubble.t then
+  if POP_RESPAWN <= bubble.t then
     pop_begin(bubble.new_x, bubble.new_y, pop_radius(pop_row()))
   end
 end
@@ -247,6 +264,7 @@ function pop.update(dt)
 end
 
 pop.pressed = pop_pressed
+pop.teacher = pop_speed_shift
 
 -- Drawing
 

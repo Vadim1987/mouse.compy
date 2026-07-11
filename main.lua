@@ -20,7 +20,8 @@ SND = {
   cheese = "powerup",
   click = "ping",
   bell = "win",
-  pop = "chirp"
+  pop = "chirp",
+  win = "win"
 }
 
 function play(name)
@@ -115,6 +116,7 @@ end
 require("meet")
 require("find")
 require("pop")
+require("win")
 
 -- App state. mode is "menu" or "game"; active is the
 -- module name of the running mini-game.
@@ -219,6 +221,7 @@ function close_game()
   games[GS.active].leave()
   GS.active = nil
   GS.mode = "menu"
+  WIN.won = false
 end
 
 function ensure_init()
@@ -283,8 +286,10 @@ end
 
 function update_active(dt)
   if GS.mode == "game" then
-    notch_tick_active(dt)
-    games[GS.active].update(dt)
+    if not WIN.won then
+      notch_tick_active(dt)
+      games[GS.active].update(dt)
+    end
   else
     menu_update(dt)
   end
@@ -341,6 +346,10 @@ function love.draw()
   end
   if GS.mode == "game" then
     games[GS.active].draw()
+    draw_gauge(WIN.count, WIN.goal)
+    if WIN.won then
+      draw_win_overlay()
+    end
   else
     menu_draw()
   end
@@ -377,6 +386,10 @@ end
 
 function love.mousepressed(x, y, button, istouch)
   note_pointer(istouch)
+  if WIN.won then
+    close_game()
+    return 
+  end
   route_input("pressed", button)
 end
 

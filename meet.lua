@@ -453,6 +453,7 @@ function meet.enter()
   reset_mm_timers()
   barrier_clear()
   cheese_respawn()
+  win_reset(MEET_GOAL)
   love.mouse.setVisible(false)
   love.mouse.setRelativeMode(true)
 end
@@ -637,6 +638,7 @@ function on_cheese()
   mm.wink = DELIGHT.wink_time
   play_cheese()
   mm.cheese_count = mm.cheese_count + 1
+  win_score()
   cheese_take()
   barrier_on_cheese(mm.cheese_count, mm.x, mm.y)
 end
